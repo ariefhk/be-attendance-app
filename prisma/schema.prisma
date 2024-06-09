@@ -12,3 +12,92 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HOLIDAY
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  PARENT
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(ADMIN)
+  token     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  teacher   Teacher?
+  parent    Parent?
+
+  @@map("users")
+}
+
+model Teacher {
+  id        Int      @id @default(autoincrement())
+  nip       String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  userId    Int      @unique @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  class     Class[]
+
+  @@map("teachers")
+}
+
+model Parent {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  userId    Int       @unique @map("user_id")
+  user      User      @relation(fields: [userId], references: [id])
+  student   Student[]
+
+  @@map("parents")
+}
+
+model Student {
+  id         Int          @id @default(autoincrement())
+  name       String
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+  parentId   Int?         @unique @map("parent_id")
+  parent     Parent?      @relation(fields: [parentId], references: [id])
+  classId    Int?         @map("class_id")
+  class      Class?       @relation(fields: [classId], references: [id])
+  attendance Attendance[]
+
+  @@map("students")
+}
+
+model Class {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  teacherId Int       @map("teacher_id")
+  teacher   Teacher   @relation(fields: [teacherId], references: [id])
+  student   Student[]
+
+  @@map("classes")
+}
+
+model Attendance {
+  id        Int              @id @default(autoincrement())
+  date      DateTime
+  status    AttendanceStatus
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+  studentId Int              @map("student_id")
+  student   Student          @relation(fields: [studentId], references: [id])
+
+  @@map("attendances")
+}
