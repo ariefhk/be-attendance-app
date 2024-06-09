@@ -80,9 +80,6 @@ export class AuthService {
     const token = await makeJwt(
       {
         id: existedUser.id,
-        name: existedUser.name,
-        email: existedUser.email,
-        role: existedUser.role,
       },
       "30d"
     );
