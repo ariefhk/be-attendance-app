@@ -28,7 +28,12 @@ export const authMiddleware = async (req, res, next) => {
         return res.status(API_STATUS_CODE.UNAUTHORIZED).json(ResponseHelper.toJsonError("Unauthorized!")).end();
       }
 
-      req.user = user;
+      req.loggedUser = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      };
       next();
     } catch (error) {
       if (error instanceof APIError) {
