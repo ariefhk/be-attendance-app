@@ -41,6 +41,8 @@ export const authMiddleware = async (req, res, next) => {
       }
 
       return res.status(API_STATUS_CODE.SERVER_ERROR).json(ResponseHelper.toJsonError("Server Error While Check Token!")).end();
+    } finally {
+      await db.$disconnect();
     }
   }
 };

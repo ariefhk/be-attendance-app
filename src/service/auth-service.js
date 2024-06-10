@@ -8,16 +8,19 @@ export class AuthService {
   static async register(request) {
     const { email } = request;
 
+    // check user
     const countUser = await db.user.count({
       where: {
         email,
       },
     });
 
+    // check email already used
     if (countUser !== 0) {
       throw new APIError(API_STATUS_CODE.BAD_REQUEST, "Email already taken!");
     }
 
+    // chec role
     if (!request?.role) {
       throw new APIError(API_STATUS_CODE.BAD_REQUEST, "Empty given Role!");
     }

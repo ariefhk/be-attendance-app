@@ -12,7 +12,7 @@
     "db:studio": "npx prisma studio",
     "db:push": "npx prisma db push --force-reset && npx prisma db push",
     "db:push:seed": "npm run db:push && npm run db:seed",
-    "db:seed": "node ./src/db/seeder.js",
+    "db:seed": "node ./src/db/seeder/seed.js",
     "test": "jest -i --no-cache --coverage --colors --verbose --detectOpenHandles --forceExit"
   },
   "jest": {

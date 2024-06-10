@@ -2,12 +2,11 @@ import { db } from "../application/db.js";
 import { APIError } from "../error/api-error.js";
 import { API_STATUS_CODE } from "../helper/status-code.js";
 import bcrypt from "bcrypt";
+import { roleCheck, ROLE } from "../helper/allowed-role.js";
 
 export class UserService {
   static async list(request) {
-    const isLoggedAdmin = request?.loggedUserRole === "ADMIN";
-
-    if (!isLoggedAdmin) {
+    if (!roleCheck(ROLE.IS_ADMIN, request?.loggedUserRole)) {
       throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
     }
 
@@ -27,9 +26,7 @@ export class UserService {
     });
   }
   static async create(request) {
-    const isLoggedAdmin = request?.loggedUserRole === "ADMIN";
-
-    if (!isLoggedAdmin) {
+    if (!roleCheck(ROLE.IS_ADMIN, request?.loggedUserRole)) {
       throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
     }
 
@@ -82,9 +79,7 @@ export class UserService {
   }
 
   static async update(request) {
-    const isLoggedAdmin = request?.loggedUserRole === "ADMIN";
-
-    if (!isLoggedAdmin) {
+    if (!roleCheck(ROLE.IS_ADMIN, request?.loggedUserRole)) {
       throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
     }
 
@@ -155,9 +150,7 @@ export class UserService {
   }
 
   static async delete(request) {
-    const isLoggedAdmin = request?.loggedUserRole === "ADMIN";
-
-    if (!isLoggedAdmin) {
+    if (!roleCheck(ROLE.IS_ADMIN, request?.loggedUserRole)) {
       throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
     }
 
