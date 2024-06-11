@@ -1,9 +1,7 @@
 import { db } from "../application/db.js";
 import { APIError } from "../error/api-error.js";
 import { ROLE, roleCheck } from "../helper/allowed-role.js";
-import { makeJwt } from "../helper/jwt.js";
 import { API_STATUS_CODE } from "../helper/status-code.js";
-import bcrypt from "bcrypt";
 
 export class ClassService {
   static async list(request) {
@@ -20,6 +18,8 @@ export class ClassService {
           name: true,
           teacher: {
             select: {
+              id: true,
+              nip: true,
               user: {
                 select: {
                   id: true,
@@ -41,6 +41,8 @@ export class ClassService {
           name: true,
           teacher: {
             select: {
+              id: true,
+              nip: true,
               user: {
                 select: {
                   id: true,
@@ -53,17 +55,20 @@ export class ClassService {
         },
       });
     }
+
     // Transform the data to the desired format
     const formattedClasses =
       classes.length > 0
         ? classes.map((cls) => ({
             id: cls.id,
             name: cls.name,
-            teacher_id: cls.teacher?.user?.id || "No teacher assigned",
-            teacher_name: cls.teacher?.user?.name || "No teacher assigned",
+            teacher_id: cls?.teacher?.id ?? null,
+            teacher_name: cls.teacher?.user?.name ?? null,
             createdAt: cls.createdAt,
           }))
         : [];
+
+    console.log("FORMATEDL CASS: ", formattedClasses);
 
     return formattedClasses;
   }
@@ -87,6 +92,7 @@ export class ClassService {
           name: true,
           teacher: {
             select: {
+              id: true,
               nip: true,
               user: {
                 select: {
@@ -108,6 +114,7 @@ export class ClassService {
           name: true,
           teacher: {
             select: {
+              id: true,
               nip: true,
               user: {
                 select: {
@@ -123,12 +130,60 @@ export class ClassService {
     const formattedClass = {
       id: createdClass.id,
       name: createdClass.name,
-      teacher_id: createdClass.teacher?.id || "No teacher assigned",
-      teacher_nip: createdClass.teacher?.nip || "No NIP teacher assigned",
-      teacher_name: createdClass.teacher?.user?.name || "No teacher assigned",
+      teacher_id: createdClass?.teacher?.id ?? null,
+      teacher_nip: createdClass?.teacher?.nip ?? null,
+      teacher_name: createdClass?.teacher?.user?.name ?? null,
     };
 
     return formattedClass;
+  }
+
+  static async update(request) {
+    if (!roleCheck(ROLE.IS_ADMIN, request?.loggedUserRole)) {
+      throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
+    }
+
+    const { classId } = request;
+
+    if (!classId) {
+      throw new APIError(API_STATUS_CODE.BAD_REQUEST, "You not inputted class id");
+    }
+
+    let classes = await db.class.update({
+      where: {
+        id: classId,
+      },
+      data: {
+        name: request?.name,
+        teacherId: request?.teacherId ?? null,
+      },
+      select: {
+        id: true,
+        name: true,
+        teacher: {
+          select: {
+            id: true,
+            nip: true,
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Transform the data to the desired format
+    const formattedClasses = {
+      id: classes.id,
+      name: classes.name,
+      teacher_id: classes.teacher?.id ?? null,
+      teacher_name: classes.teacher?.user?.name ?? null,
+      createdAt: classes.createdAt,
+    };
+
+    return formattedClasses;
   }
 
   static async delete(request) {

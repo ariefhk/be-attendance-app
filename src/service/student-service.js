@@ -120,6 +120,22 @@ export class StudentService {
 
     const { studentId } = request;
 
+    let existedParent = null;
+
+    if (request?.parentId !== null) {
+      existedParent = await db.parent.findUnique({
+        where: { id: request?.parentId },
+      });
+
+      if (!existedParent) {
+        throw new APIError(API_STATUS_CODE.NOT_FOUND, "Parrent Not found!");
+      }
+    }
+    console.log("update: ", {
+      existedParent,
+      request,
+    });
+
     if (!studentId) {
       throw new APIError(API_STATUS_CODE.BAD_REQUEST, "Student id not inputted!");
     }
@@ -142,7 +158,7 @@ export class StudentService {
         email: request?.email,
         gender: request?.gender,
         classId: request.classId ?? null,
-        parentId: request.parentId ?? null,
+        parentId: existedParent?.id ? existedParent?.id : null,
       },
       where: {
         id: existedStudent.id,

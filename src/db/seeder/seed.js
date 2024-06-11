@@ -140,14 +140,6 @@ async function main() {
       },
     },
   });
-  const class4 = await db.class.create({
-    data: {
-      name: "History 101",
-      teacher: {
-        connect: { id: teacher2.id },
-      },
-    },
-  });
 
   console.log("Database has been seeded with 1 admin, 3 parents, and 3 teachers. 🌱");
 }

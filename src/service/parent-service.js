@@ -11,6 +11,7 @@ export class ParentService {
 
     const parents = await db.parent.findMany({
       select: {
+        id: true,
         user: {
           select: {
             id: true,
@@ -21,7 +22,14 @@ export class ParentService {
         },
         student: {
           select: {
+            id: true,
             name: true,
+            class: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
         createdAt: true,
@@ -31,7 +39,7 @@ export class ParentService {
     const formattedParrents =
       parents.length > 0
         ? parents.map((pr) => ({
-            id: pr.user.id,
+            id: pr.id,
             name: pr.user.name,
             email: pr.user.email,
             student_count: pr.student.length,
@@ -41,7 +49,8 @@ export class ParentService {
                     id: student.id,
                     name: student.name,
                     email: student.email,
-                    // Add other student properties as needed
+                    class_id: student?.class?.id ?? null,
+                    class_name: student?.class?.name ?? null,
                   }))
                 : [],
             createdAt: pr.createdAt,

@@ -48,14 +48,14 @@ export class StudentController {
 
       const requestData = {
         loggedUserRole,
-        studentId: Number(req?.params?.studentId),
+        studentId: req?.params?.studentId ? Number(req?.params?.studentId) : null,
         nisn: req?.body?.nisn,
         no_telp: req?.body?.no_telp,
         name: req?.body?.name,
         email: req?.body?.email,
         gender: req?.body?.gender,
-        classId: req?.body?.classId ?? null,
-        parentId: req?.body?.parentId ?? null,
+        classId: req?.body?.classId ? Number(req?.body?.classId) : null,
+        parentId: req?.body?.parentId ? Number(req?.body?.parentId) : null,
       };
 
       const student = await StudentService.update(requestData);
