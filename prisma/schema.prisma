@@ -92,7 +92,7 @@ model Class {
   name       String
   createdAt  DateTime     @default(now()) @map("created_at")
   updatedAt  DateTime     @updatedAt @map("updated_at")
-  teacherId  Int?         @unique @map("teacher_id")
+  teacherId  Int?         @map("teacher_id")
   teacher    Teacher?     @relation(fields: [teacherId], references: [id])
   student    Student[]
   attendance Attendance[]

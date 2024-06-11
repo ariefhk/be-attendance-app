@@ -3,6 +3,23 @@ import { API_STATUS_CODE } from "../helper/status-code.js";
 import { UserService } from "../service/user-service.js";
 
 export class UserController {
+  static async register(req, res, next) {
+    try {
+      const registerUser = await UserService.register(req?.body);
+      return res.status(API_STATUS_CODE.CREATED).json(ResponseHelper.toJson("Success Create User", registerUser));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async login(req, res, next) {
+    try {
+      const loginUser = await UserService.login(req?.body);
+      return res.status(API_STATUS_CODE.OK).json(ResponseHelper.toJson("Success Login User", loginUser));
+    } catch (error) {
+      next(error);
+    }
+  }
   static getCurrent(req, res, next) {
     try {
       const loggedUser = req.loggedUser;
