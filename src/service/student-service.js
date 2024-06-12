@@ -131,10 +131,6 @@ export class StudentService {
         throw new APIError(API_STATUS_CODE.NOT_FOUND, "Parrent Not found!");
       }
     }
-    console.log("update: ", {
-      existedParent,
-      request,
-    });
 
     if (!studentId) {
       throw new APIError(API_STATUS_CODE.BAD_REQUEST, "Student id not inputted!");
@@ -150,16 +146,30 @@ export class StudentService {
       throw new APIError(API_STATUS_CODE.NOT_FOUND, "Student not found!");
     }
 
+    let studentData = {
+      nisn: request?.nisn,
+      no_telp: request?.no_telp,
+      name: request?.name,
+      email: request?.email,
+      gender: request?.gender,
+    };
+
+    if (request?.classId) {
+      studentData = {
+        ...studentData,
+        classId: request.classId,
+      };
+    }
+
+    if (existedParent?.id) {
+      studentData = {
+        ...studentData,
+        parentId: existedParent?.id,
+      };
+    }
+
     const student = await db.student.update({
-      data: {
-        nisn: request?.nisn,
-        no_telp: request?.no_telp,
-        name: request?.name,
-        email: request?.email,
-        gender: request?.gender,
-        classId: request.classId ?? null,
-        parentId: existedParent?.id ? existedParent?.id : null,
-      },
+      data: studentData,
       where: {
         id: existedStudent.id,
       },
