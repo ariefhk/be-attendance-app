@@ -9,7 +9,8 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  // provider = "mysql" // use it if used mysql
+  provider = "postgresql" //use it if used postgressql
   url      = env("DATABASE_URL")
 }
 
@@ -70,32 +71,41 @@ model Parent {
 }
 
 model Student {
-  id         Int          @id @default(autoincrement())
-  name       String
-  nisn       String?
-  email      String?
-  no_telp    String?
-  gender     GENDER
-  createdAt  DateTime     @default(now()) @map("created_at")
-  updatedAt  DateTime     @updatedAt @map("updated_at")
-  parentId   Int?         @map("parent_id")
-  parent     Parent?      @relation(fields: [parentId], references: [id])
-  classId    Int?         @map("class_id")
-  class      Class?       @relation(fields: [classId], references: [id])
-  attendance Attendance[]
+  id           Int            @id @default(autoincrement())
+  name         String
+  nisn         String?
+  email        String?
+  no_telp      String?
+  gender       GENDER
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  parentId     Int?           @map("parent_id")
+  parent       Parent?        @relation(fields: [parentId], references: [id])
+  attendance   Attendance[]
+  studentClass StudentClass[]
 
   @@map("students")
 }
 
+model StudentClass {
+  studentId Int
+  classId   Int
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, classId])
+  @@map("student_classes")
+}
+
 model Class {
-  id         Int          @id @default(autoincrement())
-  name       String
-  createdAt  DateTime     @default(now()) @map("created_at")
-  updatedAt  DateTime     @updatedAt @map("updated_at")
-  teacherId  Int?         @map("teacher_id")
-  teacher    Teacher?     @relation(fields: [teacherId], references: [id])
-  student    Student[]
-  attendance Attendance[]
+  id           Int            @id @default(autoincrement())
+  name         String
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  teacherId    Int?           @map("teacher_id")
+  teacher      Teacher?       @relation(fields: [teacherId], references: [id])
+  attendance   Attendance[]
+  studentClass StudentClass[]
 
   @@map("classes")
 }

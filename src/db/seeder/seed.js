@@ -1,4 +1,4 @@
-import { db } from "../../application/db.js";
+import { db } from "../db-connetor.js";
 import { bcryptPassword } from "../../helper/hashing.js";
 
 async function main() {

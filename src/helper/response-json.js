@@ -15,7 +15,6 @@ export class ResponseHelper {
   }
 
   static toJsonError(message, errors) {
-    logger.error(message);
     if (!errors) {
       return {
         message,

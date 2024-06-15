@@ -1,6 +1,13 @@
 import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
+
+export const generateUUID = () => uuidv4();
 
 export const bcryptPassword = async (password, salt = 10) => {
+  return await bcrypt.hash(password, salt);
+};
+
+export const createBcryptPassword = async (password, salt = 10) => {
   return await bcrypt.hash(password, salt);
 };
 

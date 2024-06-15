@@ -9,6 +9,8 @@ export class StudentController {
 
       const requestData = {
         loggedUserRole,
+        parentId: req?.body?.parentId ? Number(req?.body?.parentId) : null,
+        name: req?.query?.name,
       };
 
       const students = await StudentService.list(requestData);
@@ -30,8 +32,8 @@ export class StudentController {
         name: req?.body?.name,
         email: req?.body?.email,
         gender: req?.body?.gender,
-        classId: req?.body?.classId ?? null,
-        parentId: req?.body?.parentId ?? null,
+        classId: req?.body?.classId ? Number(req?.body?.classId) : null,
+        parentId: req?.body?.parentId ? Number(req?.body?.parentId) : null,
       };
 
       const user = await StudentService.create(requestData);
@@ -48,13 +50,14 @@ export class StudentController {
 
       const requestData = {
         loggedUserRole,
-        studentId: req?.params?.studentId ? Number(req?.params?.studentId) : null,
         nisn: req?.body?.nisn,
         no_telp: req?.body?.no_telp,
         name: req?.body?.name,
         email: req?.body?.email,
         gender: req?.body?.gender,
-        classId: req?.body?.classId ? Number(req?.body?.classId) : null,
+        studentId: req?.params?.studentId ? Number(req?.params?.studentId) : null,
+        newClassId: req?.body?.newClassId ? Number(req?.body?.newClassId) : null,
+        oldClassId: req?.body?.oldClassId ? Number(req?.body?.oldClassId) : null,
         parentId: req?.body?.parentId ? Number(req?.body?.parentId) : null,
       };
 

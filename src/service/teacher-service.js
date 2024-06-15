@@ -1,4 +1,4 @@
-import { db } from "../application/db.js";
+import { db } from "../db/db-connetor.js";
 import { APIError } from "../error/api-error.js";
 import { ROLE, roleCheck } from "../helper/allowed-role.js";
 import { API_STATUS_CODE } from "../helper/status-code.js";
@@ -37,7 +37,7 @@ export class TeacherService {
             nip: tc.nip,
             name: tc.user.name,
             email: tc.user.email,
-            class:
+            classes:
               tc.class.length > 0
                 ? tc.class.map((cl) => ({
                     id: cl.id,

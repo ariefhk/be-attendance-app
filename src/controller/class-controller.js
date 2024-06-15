@@ -6,14 +6,34 @@ export class ClassController {
   static async list(req, res, next) {
     try {
       const loggedUserRole = req.loggedUser.role;
+      const loggedUserId = req.loggedUser.id;
 
       const requestData = {
         loggedUserRole,
+        loggedUserId,
+        name: req?.query?.name,
       };
 
       const classes = await ClassService.list(requestData);
 
       return res.status(API_STATUS_CODE.CREATED).json(ResponseHelper.toJson("Success Get Classes", classes));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async detailClass(req, res, next) {
+    try {
+      const loggedUserRole = req.loggedUser.role;
+
+      const requestData = {
+        loggedUserRole,
+        classId: req?.params?.classId ? Number(req?.params?.classId) : null,
+      };
+
+      const classes = await ClassService.detailClass(requestData);
+
+      return res.status(API_STATUS_CODE.OK).json(ResponseHelper.toJson("Success get detail Class", classes));
     } catch (error) {
       next(error);
     }

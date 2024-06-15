@@ -1,60 +1,68 @@
-import { db } from "../application/db.js";
+import { db } from "../db/db-connetor.js";
 import { APIError } from "../error/api-error.js";
-import { ROLE, roleCheck } from "../helper/allowed-role.js";
+import { ROLE, checkAllowedRole } from "../helper/allowed-role.js";
 import { API_STATUS_CODE } from "../helper/status-code.js";
 
 export class ClassService {
   static async list(request) {
-    if (!roleCheck(ROLE.IS_ADMIN_TEACHER, request?.loggedUserRole)) {
-      throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
-    }
-
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, request?.loggedUserRole);
+    let filter = {};
+    let teacherFilter = {};
+    let combinedFilter = {};
     let classes;
 
-    if (request?.loggedUserRole === "ADMIN") {
-      classes = await db.class.findMany({
-        select: {
-          id: true,
-          name: true,
-          teacher: {
-            select: {
-              id: true,
-              nip: true,
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-          },
-          createdAt: true,
-        },
-      });
-    } else if (request?.loggedUserRole === "TEACHER") {
-      classes = await db.class.findMany({
-        where: {
-          teacherId: request?.loggedUserId,
-        },
-        select: {
-          id: true,
-          name: true,
-          teacher: {
-            select: {
-              id: true,
-              nip: true,
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-          },
-          createdAt: true,
-        },
-      });
+    if (request?.name) {
+      filter.name = {
+        contains: request?.name,
+        mode: "insensitive",
+      };
     }
+
+    if (request?.loggedUserRole === "TEACHER") {
+      const existedTeacher = await db.teacher.findFirst({
+        where: {
+          userId: request?.loggedUserId,
+        },
+      });
+
+      if (!existedTeacher) {
+        throw new APIError(API_STATUS_CODE.NOT_FOUND, "Teacher not found!");
+      }
+
+      teacherFilter.teacherId = existedTeacher.id;
+      combinedFilter = { AND: [filter, teacherFilter] };
+    }
+
+    classes = await db.class.findMany({
+      where: request?.loggedUserRole === "ADMIN" ? filter : combinedFilter,
+      select: {
+        id: true,
+        name: true,
+        teacher: {
+          select: {
+            id: true,
+            nip: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        studentClass: {
+          orderBy: {
+            student: {
+              name: "asc",
+            },
+          },
+          select: {
+            student: true,
+          },
+        },
+        createdAt: true,
+      },
+    });
 
     // Transform the data to the desired format
     const formattedClasses =
@@ -62,23 +70,112 @@ export class ClassService {
         ? classes.map((cls) => ({
             id: cls.id,
             name: cls.name,
-            teacher_id: cls?.teacher?.id ?? null,
-            teacher_name: cls.teacher?.user?.name ?? null,
+            total_student: cls.studentClass.length,
+            teacher: {
+              id: cls?.teacher?.id ?? null,
+              name: cls.teacher?.user?.name ?? null,
+            },
+            student:
+              cls.studentClass.length > 0
+                ? cls.studentClass.map((stdCls) => {
+                    return {
+                      id: stdCls?.student?.id ?? null,
+                      name: stdCls?.student?.name ?? null,
+                      nisn: stdCls?.student?.nisn ?? null,
+                    };
+                  })
+                : [],
             createdAt: cls.createdAt,
           }))
         : [];
 
-    console.log("FORMATEDL CASS: ", formattedClasses);
-
     return formattedClasses;
   }
 
-  static async create(request) {
-    if (!roleCheck(ROLE.IS_ADMIN, request?.loggedUserRole)) {
-      throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
+  static async detailClass(request) {
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, request?.loggedUserRole);
+
+    const { classId } = request;
+
+    if (!classId) {
+      throw new APIError(API_STATUS_CODE.BAD_REQUEST, "You not inputted class id");
     }
 
+    const existedClass = await db.class.findUnique({
+      where: {
+        id: classId,
+      },
+      select: {
+        id: true,
+        name: true,
+        teacher: {
+          select: {
+            id: true,
+            nip: true,
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        studentClass: {
+          orderBy: {
+            student: {
+              name: "asc",
+            },
+          },
+          select: {
+            student: {
+              select: {
+                id: true,
+                name: true,
+                nisn: true,
+                email: true,
+                gender: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!existedClass) {
+      throw new APIError(API_STATUS_CODE.NOT_FOUND, "Class not found!");
+    }
+
+    const formattedClass = {
+      id: existedClass.id,
+      name: existedClass.name,
+      teacher: {
+        id: existedClass?.teacher?.id ?? null,
+        nip: existedClass?.teacher?.nip ?? null,
+        name: existedClass?.teacher?.user?.name ?? null,
+      },
+      students:
+        existedClass?.studentClass?.length > 0
+          ? existedClass.studentClass.map((stdCls) => {
+              return {
+                id: stdCls.student.id ?? null,
+                name: stdCls.student.name ?? null,
+                nisn: stdCls.student.nisn ?? null,
+                email: stdCls.student.email ?? null,
+                gender: stdCls.student.gender ?? null,
+              };
+            })
+          : [],
+    };
+
+    return formattedClass;
+  }
+
+  static async create(request) {
+    checkAllowedRole(ROLE.IS_ADMIN, request?.loggedUserRole);
     const { teacherId } = request;
+
+    if (!request?.name) {
+      throw new APIError(API_STATUS_CODE.BAD_REQUEST, "class name must be submitted!");
+    }
 
     let createdClass;
 
@@ -104,6 +201,17 @@ export class ClassService {
         },
       });
     } else {
+      const existedClass = await db.class.findFirst({
+        where: {
+          name: request?.name,
+          teacherId: teacherId,
+        },
+      });
+
+      if (existedClass) {
+        throw new APIError(API_STATUS_CODE.BAD_REQUEST, "class is existed!");
+      }
+
       createdClass = await db.class.create({
         data: {
           name: request?.name,
@@ -130,23 +238,33 @@ export class ClassService {
     const formattedClass = {
       id: createdClass.id,
       name: createdClass.name,
-      teacher_id: createdClass?.teacher?.id ?? null,
-      teacher_nip: createdClass?.teacher?.nip ?? null,
-      teacher_name: createdClass?.teacher?.user?.name ?? null,
+      teacher: {
+        id: createdClass?.teacher?.id ?? null,
+        nip: createdClass?.teacher?.nip ?? null,
+        name: createdClass?.teacher?.user?.name ?? null,
+      },
     };
 
     return formattedClass;
   }
 
   static async update(request) {
-    if (!roleCheck(ROLE.IS_ADMIN, request?.loggedUserRole)) {
-      throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
-    }
+    checkAllowedRole(ROLE.IS_ADMIN, request?.loggedUserRole);
 
     const { classId } = request;
 
     if (!classId) {
       throw new APIError(API_STATUS_CODE.BAD_REQUEST, "You not inputted class id");
+    }
+
+    const exitedClass = await db.class.findUnique({
+      where: {
+        id: classId,
+      },
+    });
+
+    if (!exitedClass) {
+      throw new APIError(API_STATUS_CODE.NOT_FOUND, "class not found!");
     }
 
     let classes = await db.class.update({
@@ -178,8 +296,10 @@ export class ClassService {
     const formattedClasses = {
       id: classes.id,
       name: classes.name,
-      teacher_id: classes.teacher?.id ?? null,
-      teacher_name: classes.teacher?.user?.name ?? null,
+      teacher: {
+        id: classes.teacher?.id ?? null,
+        name: classes.teacher?.user?.name ?? null,
+      },
       createdAt: classes.createdAt,
     };
 
@@ -187,9 +307,7 @@ export class ClassService {
   }
 
   static async delete(request) {
-    if (!roleCheck(ROLE.IS_ADMIN, request?.loggedUserRole)) {
-      throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
-    }
+    checkAllowedRole(ROLE.IS_ADMIN, request?.loggedUserRole);
 
     const { classId } = request;
 

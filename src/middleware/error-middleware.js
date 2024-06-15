@@ -2,16 +2,26 @@ import { APIError } from "../error/api-error.js";
 import { logger } from "../application/logging.js";
 import { ResponseHelper } from "../helper/response-json.js";
 import { API_STATUS_CODE } from "../helper/status-code.js";
-import { db } from "../application/db.js";
+import { Prisma } from "@prisma/client";
 
 export const errorMiddleware = async (error, req, res, next) => {
   if (error instanceof APIError) {
-    logger.error(`Error status ${error.status}, ${error.message}`);
-    await db.$disconnect();
-    return res.status(error.status).json(ResponseHelper.toJsonError(error.message));
+    logger.error(`ERROR_STATUS: ${error.status}, API_ERROR: ${error.message}`);
+    return res.status(error.status).json(ResponseHelper.toJsonError(error.message)).end();
+  } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    logger.error(`ERROR_STATUS: 500, PRISMA_CLIENT_KNOWN_ERROR: ${error.message}`);
+    return res.status(API_STATUS_CODE.SERVER_ERROR).json(ResponseHelper.toJsonError(error.message)).end();
+  } else if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+    logger.error(`ERROR_STATUS: 500, PRISMA_CLIENT_UNKNOWN_ERROR: ${error.message}`);
+    return res.status(API_STATUS_CODE.SERVER_ERROR).json(ResponseHelper.toJsonError(error.message)).end();
+  } else if (error instanceof Prisma.PrismaClientInitializationError) {
+    logger.error(`ERROR_STATUS: 500, PRISMA_INITIALIZATION_ERROR: ${error.message}`);
+    return res.status(API_STATUS_CODE.SERVER_ERROR).json(ResponseHelper.toJsonError(error.message)).end();
+  } else if (error instanceof Prisma.PrismaClientValidationError) {
+    logger.error(`ERROR_STATUS: 500, PRISMA_VALIDATION_ERROR: ${error.message}`);
+    return res.status(API_STATUS_CODE.SERVER_ERROR).json(ResponseHelper.toJsonError(error.message)).end();
   } else if (error instanceof Error) {
-    logger.error(`Error status 500, ${error.message}`);
-    await db.$disconnect();
-    return res.status(API_STATUS_CODE.SERVER_ERROR).json(ResponseHelper.toJsonError(error.message));
+    logger.error(`ERROR_STATUS: 500, SERVER_ERROR: ${error.message}`);
+    return res.status(API_STATUS_CODE.SERVER_ERROR).json(ResponseHelper.toJsonError(error.message)).end();
   }
 };

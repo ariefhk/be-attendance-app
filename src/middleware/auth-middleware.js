@@ -1,4 +1,4 @@
-import { db } from "../application/db.js";
+import { db } from "../db/db-connetor.js";
 import { API_STATUS_CODE } from "../helper/status-code.js";
 import { ResponseHelper } from "../helper/response-json.js";
 import { decodeJwt } from "../helper/jwt.js";
@@ -41,8 +41,6 @@ export const authMiddleware = async (req, res, next) => {
       }
 
       return res.status(API_STATUS_CODE.SERVER_ERROR).json(ResponseHelper.toJsonError("Server Error While Check Token!")).end();
-    } finally {
-      await db.$disconnect();
     }
   }
 };

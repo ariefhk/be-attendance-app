@@ -33,6 +33,7 @@ privateRouter.delete(studentApiPrefix + "/:studentId", authMiddleware, StudentCo
 
 // CLASS
 privateRouter.get(classApiPrefix, authMiddleware, ClassController.list);
+privateRouter.get(classApiPrefix + "/:classId", authMiddleware, ClassController.detailClass);
 privateRouter.post(classApiPrefix, authMiddleware, ClassController.create);
 privateRouter.put(classApiPrefix + "/:classId", authMiddleware, ClassController.update);
 privateRouter.delete(classApiPrefix + "/:classId", authMiddleware, ClassController.delete);
@@ -41,10 +42,22 @@ privateRouter.delete(classApiPrefix + "/:classId", authMiddleware, ClassControll
 privateRouter.get(teacherApiPrefix, authMiddleware, TeacherController.list);
 
 // ATTENDANCE
-privateRouter.get(attendanceApiPrefix, authMiddleware, AttendanceController.list);
 privateRouter.get(attendanceApiPrefix + "/daily", authMiddleware, AttendanceController.dailyList);
 privateRouter.get(attendanceApiPrefix + "/weekly", authMiddleware, AttendanceController.weeklyList);
 privateRouter.get(attendanceApiPrefix + "/student/weekly", authMiddleware, AttendanceController.studentWeeklyList);
+privateRouter.get(attendanceApiPrefix + "/student/monthly", authMiddleware, AttendanceController.studentMonthlyList);
 privateRouter.post(attendanceApiPrefix, authMiddleware, AttendanceController.createOrUpdate);
+privateRouter.post(
+  attendanceApiPrefix + "/present/daily",
+  authMiddleware,
+  AttendanceController.createOrUpdateStudentToAllPresent
+);
+privateRouter.post(attendanceApiPrefix + "/absent/daily", authMiddleware, AttendanceController.createOrUpdateStudentToAllAbsent);
+privateRouter.post(
+  attendanceApiPrefix + "/holiday/daily",
+  authMiddleware,
+  AttendanceController.createOrUpdateStudentToAllHoliday
+);
+privateRouter.post(attendanceApiPrefix + "/late/daily", authMiddleware, AttendanceController.createOrUpdateStudentToAllLate);
 
 export { privateRouter };

@@ -1,8 +1,8 @@
-import { db } from "../application/db.js";
+import { db } from "../db/db-connetor.js";
 import { APIError } from "../error/api-error.js";
 import { API_STATUS_CODE } from "../helper/status-code.js";
-import { roleCheck, ROLE } from "../helper/allowed-role.js";
-import { bcryptPassword, compareBcryptPassword } from "../helper/hashing.js";
+import { ROLE, checkAllowedRole } from "../helper/allowed-role.js";
+import { compareBcryptPassword, createBcryptPassword } from "../helper/hashing.js";
 import { makeJwt } from "../helper/jwt.js";
 
 export class UserService {
@@ -26,7 +26,7 @@ export class UserService {
       throw new APIError(API_STATUS_CODE.BAD_REQUEST, "Empty given Role!");
     }
 
-    request.password = await bcryptPassword(request.password, 10);
+    request.password = await createBcryptPassword(request.password, 10);
 
     const user = await db.user.create({
       data: {
@@ -110,9 +110,8 @@ export class UserService {
   }
 
   static async list(request) {
-    if (!roleCheck(ROLE.IS_ADMIN, request?.loggedUserRole)) {
-      throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
-    }
+    // check role
+    checkAllowedRole(ROLE.IS_ADMIN, request?.loggedUserRole);
 
     return db.user.findMany({
       orderBy: [
@@ -131,9 +130,8 @@ export class UserService {
   }
 
   static async create(request) {
-    if (!roleCheck(ROLE.IS_ADMIN, request?.loggedUserRole)) {
-      throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
-    }
+    // check role
+    checkAllowedRole(ROLE.IS_ADMIN, request?.loggedUserRole);
 
     const { email } = request;
 
@@ -147,7 +145,7 @@ export class UserService {
       throw new APIError(API_STATUS_CODE.BAD_REQUEST, "Email already taken!");
     }
 
-    request.password = await bcryptPassword(request.password, 10);
+    request.password = await createBcryptPassword(request.password, 10);
 
     const user = await db.user.create({
       data: {
@@ -184,9 +182,8 @@ export class UserService {
   }
 
   static async update(request) {
-    if (!roleCheck(ROLE.IS_ADMIN, request?.loggedUserRole)) {
-      throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
-    }
+    // check role
+    checkAllowedRole(ROLE.IS_ADMIN, request?.loggedUserRole);
 
     const { userId } = request;
 
@@ -205,7 +202,7 @@ export class UserService {
     }
 
     if (request?.password) {
-      request.password = await bcryptPassword(request.password, 10);
+      request.password = await createBcryptPassword(request.password, 10);
     }
 
     if (request?.role && request?.role !== existedUser.role) {
@@ -255,9 +252,8 @@ export class UserService {
   }
 
   static async delete(request) {
-    if (!roleCheck(ROLE.IS_ADMIN, request?.loggedUserRole)) {
-      throw new APIError(API_STATUS_CODE.FORBIDDEN, "You dont have access to this!");
-    }
+    // check role
+    checkAllowedRole(ROLE.IS_ADMIN, request?.loggedUserRole);
 
     const { userId } = request;
 
