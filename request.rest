@@ -1,0 +1,32 @@
+################# USER ##################
+
+###
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{ 
+"name":"Admin",
+"email":"admin@gmail.com",
+"password": "rahasia",
+"role":"ADMIN"
+}
+
+###
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{ 
+"email": "admin@gmail.com",
+"password": "rahasia"
+}
+
+###
+GET http://localhost:5000/api/user/current
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNzE5OTU5ODM3LCJleHAiOjE3MjI1NTE4Mzd9.fJK76yIcgwpL_W6YWuxq20W9xiXS0nxyBm1fgoTfEp4
+
+
+###
+DELETE http://localhost:5000/api/user/current/logout
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNzE5OTU5ODM3LCJleHAiOjE3MjI1NTE4Mzd9.fJK76yIcgwpL_W6YWuxq20W9xiXS0nxyBm1fgoTfEp4
