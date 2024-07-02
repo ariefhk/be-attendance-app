@@ -45,7 +45,8 @@ export class UserService {
   }
 
   static async getAll(request) {
-    const { name } = request;
+    const { name, loggedUserRole } = request;
+    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
     const filter = {};
 
     if (name) {
@@ -65,6 +66,48 @@ export class UserService {
     });
 
     return users.map((user) => this.toUserResponse(user));
+  }
+
+  static async update(request) {
+    const { userId, loggedUserRole, name, role, email, password, nip } = request;
+
+    checkAllowedRole(ROLE.IS_ALL_ROLE, loggedUserRole);
+
+    if (!userId) {
+      throw new APIError(API_STATUS_CODE.BAD_REQUEST, "User id not inputted!");
+    }
+
+    const user = await this.checkUserMustBeExistById(userId);
+
+    const updatedData = {
+      name: name ?? user.name,
+      role: role ?? user.role,
+      email: email ?? user.email,
+      password: password ? await createBcryptPassword(password) : user.password,
+    };
+
+    console.log(updatedData);
+
+    if (user.role === "TEACHER") {
+      await TeacherService.update({
+        userId: user.id,
+        nip: nip,
+      });
+
+      updatedData["nip"] = nip;
+    }
+
+    await db.user.update({
+      where: {
+        id: user.id,
+      },
+      data: updatedData,
+    });
+
+    // Delete the password property
+    delete updatedData["password"];
+
+    return updatedData;
   }
 
   static async register(request) {

@@ -5,10 +5,10 @@ POST http://localhost:5000/api/auth/register
 Content-Type: application/json
 
 { 
-"name":"Admin",
-"email":"admin@gmail.com",
+"name":"Teacher",
+"email":"teacher@gmail.com",
 "password": "rahasia",
-"role":"ADMIN"
+"role":"TEACHER"
 }
 
 ###
@@ -20,13 +20,43 @@ Content-Type: application/json
 "password": "rahasia"
 }
 
+
 ###
-GET http://localhost:5000/api/user/current
+PUT http://localhost:5000/api/users
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNzE5OTU5ODM3LCJleHAiOjE3MjI1NTE4Mzd9.fJK76yIcgwpL_W6YWuxq20W9xiXS0nxyBm1fgoTfEp4
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNzE5OTYxMjAxLCJleHAiOjE3MjI1NTMyMDF9.t5fGy95EOi-7qWDACLSS-SfSV8vpJMRjtt9OBE6sloo
+
+{
+"userId" : "2",
+"name":"Teacher",
+"nip":"212121",
+"email":"teacher@gmail.com",
+"password": "rahasia",
+"role":"TEACHER"
+}
 
 
 ###
-DELETE http://localhost:5000/api/user/current/logout
+PUT http://localhost:5000/api/users/current/1
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNzE5OTU5ODM3LCJleHAiOjE3MjI1NTE4Mzd9.fJK76yIcgwpL_W6YWuxq20W9xiXS0nxyBm1fgoTfEp4
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNzE5OTYxMjAxLCJleHAiOjE3MjI1NTMyMDF9.t5fGy95EOi-7qWDACLSS-SfSV8vpJMRjtt9OBE6sloo
+
+{
+"name":"Admin New"
+}
+
+###
+GET http://localhost:5000/api/users
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNzE5OTYxMjAxLCJleHAiOjE3MjI1NTMyMDF9.t5fGy95EOi-7qWDACLSS-SfSV8vpJMRjtt9OBE6sloo
+
+###
+GET http://localhost:5000/api/users/current
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNzE5OTYxMjAxLCJleHAiOjE3MjI1NTMyMDF9.t5fGy95EOi-7qWDACLSS-SfSV8vpJMRjtt9OBE6sloo
+
+
+###
+DELETE http://localhost:5000/api/users/current/logout
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNzE5OTYxMjAxLCJleHAiOjE3MjI1NTMyMDF9.t5fGy95EOi-7qWDACLSS-SfSV8vpJMRjtt9OBE6sloo

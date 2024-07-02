@@ -34,6 +34,7 @@ export class UserController {
       next(error);
     }
   }
+
   static getCurrent(req, res, next) {
     try {
       const user = req.loggedUser;
@@ -44,14 +45,14 @@ export class UserController {
     }
   }
 
-  static async getListUser(req, res, next) {
+  static async getAll(req, res, next) {
     try {
-      const getListUserRequest = {
-        role: req?.loggedUser?.role,
+      const getAllUserRequest = {
+        loggedUserRole: req?.loggedUser?.role,
         name: req?.query?.name,
       };
 
-      const users = await UserService.getAll(getListUserRequest);
+      const users = await UserService.getAll(getAllUserRequest);
 
       return res.status(API_STATUS_CODE.OK).json(ResponseHelper.toJson("Success get List User", users));
     } catch (error) {
@@ -59,27 +60,44 @@ export class UserController {
     }
   }
 
-  // static async update(req, res, next) {
-  //   try {
-  //     const loggedUserRole = req.loggedUser.role;
+  static async update(req, res, next) {
+    try {
+      const updateUserRequest = {
+        loggedUserRole: req.loggedUser.role,
+        userId: req.body.userId ? Number(req.body.userId) : null,
+        nip: req?.body?.nip,
+        name: req?.body?.name,
+        role: req?.body?.role,
+        email: req?.body?.email,
+        password: req?.body?.password,
+      };
 
-  //     const requestData = {
-  //       loggedUserRole,
-  //       userId: Number(req?.params?.userId),
-  //       nip: req?.body?.nip, //optional if user add role teacher
-  //       name: req?.body?.name,
-  //       role: req?.body?.role,
-  //       email: req?.body?.email,
-  //       password: req?.body?.password,
-  //     };
+      const result = await UserService.update(updateUserRequest);
 
-  //     const user = await UserService.update(requestData);
+      return res.status(API_STATUS_CODE.CREATED).json(ResponseHelper.toJson("Success update User", result));
+    } catch (error) {
+      next(error);
+    }
+  }
+  static async updateCurrent(req, res, next) {
+    try {
+      const updateUserRequest = {
+        loggedUserRole: req.loggedUser.role,
+        userId: req.params.userId ? Number(req.params.userId) : null,
+        nip: req?.body?.nip,
+        name: req?.body?.name,
+        role: req?.body?.role,
+        email: req?.body?.email,
+        password: req?.body?.password,
+      };
 
-  //     return res.status(API_STATUS_CODE.CREATED).json(ResponseHelper.toJson("Success update User", user));
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // }
+      const result = await UserService.update(updateUserRequest);
+
+      return res.status(API_STATUS_CODE.CREATED).json(ResponseHelper.toJson("Success update User", result));
+    } catch (error) {
+      next(error);
+    }
+  }
 
   static async logout(req, res, next) {
     try {
@@ -98,7 +116,7 @@ export class UserController {
   static async delete(req, res, next) {
     try {
       const deleteUserRequest = {
-        role: req.loggedUser.role,
+        loggedUserRole: req.loggedUser.role,
         userId: req?.params?.userId ? Number(req?.params?.userId) : null,
       };
 
