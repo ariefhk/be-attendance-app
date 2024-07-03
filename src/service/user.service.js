@@ -69,9 +69,9 @@ export class UserService {
   }
 
   static async update(request) {
-    const { userId, loggedUserRole, name, role, email, password, nip } = request;
+    const { userId, loggedUserRole, name, role, email, password } = request;
 
-    checkAllowedRole(ROLE.IS_ALL_ROLE, loggedUserRole);
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
 
     if (!userId) {
       throw new APIError(API_STATUS_CODE.BAD_REQUEST, "User id not inputted!");
@@ -79,35 +79,30 @@ export class UserService {
 
     const user = await this.checkUserMustBeExistById(userId);
 
-    const updatedData = {
+    const updatedUserData = {
       name: name ?? user.name,
       role: role ?? user.role,
       email: email ?? user.email,
       password: password ? await createBcryptPassword(password) : user.password,
     };
 
-    console.log(updatedData);
-
-    if (user.role === "TEACHER") {
-      await TeacherService.update({
-        userId: user.id,
-        nip: nip,
-      });
-
-      updatedData["nip"] = nip;
-    }
-
-    await db.user.update({
+    const updatedUser = await db.user.update({
       where: {
         id: user.id,
       },
-      data: updatedData,
+      data: updatedUserData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
     });
 
-    // Delete the password property
-    delete updatedData["password"];
-
-    return updatedData;
+    return {
+      id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+    };
   }
 
   static async register(request) {
@@ -129,13 +124,15 @@ export class UserService {
 
     const hashedPassword = await createBcryptPassword(password);
 
+    const createdUserData = {
+      name: name,
+      email: email,
+      password: hashedPassword,
+      role: role,
+    };
+
     const user = await db.user.create({
-      data: {
-        name: name,
-        email: email,
-        password: hashedPassword,
-        role: role,
-      },
+      data: createdUserData,
     });
 
     if (user.role === "PARENT") {
@@ -149,9 +146,58 @@ export class UserService {
         name: user.name,
         nip: request?.nip ?? null,
       });
+      createdUserData["nip"] = request?.nip ?? null;
     }
 
-    return this.toUserResponse(user);
+    delete createdUserData["password"];
+
+    return {
+      id: user.id,
+      ...createdUserData,
+    };
+  }
+
+  static async create(request) {
+    console.log("request", request);
+    const { email, name, password, role } = request;
+
+    if (!email || !password || !role || !name) {
+      throw new APIError(API_STATUS_CODE.BAD_REQUEST, "Email, password, role or name not inputted!");
+    }
+
+    const existedUser = await db.user.findFirst({
+      where: {
+        email: email,
+      },
+    });
+
+    if (existedUser) {
+      throw new APIError(API_STATUS_CODE.BAD_REQUEST, "Email already existed!");
+    }
+
+    const hashedPassword = await createBcryptPassword(password);
+
+    const createdUserData = {
+      name: name,
+      email: email,
+      password: hashedPassword,
+      role: role,
+    };
+
+    const user = await db.user.create({
+      data: createdUserData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    };
   }
 
   static async login(request) {
@@ -185,6 +231,7 @@ export class UserService {
     });
 
     return {
+      ...this.toUserResponse(existedUser),
       token,
     };
   }

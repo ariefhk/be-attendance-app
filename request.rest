@@ -59,4 +59,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNzE5OTYxMjAxLCJle
 ###
 DELETE http://localhost:5000/api/users/current/logout
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNzE5OTYxMjAxLCJleHAiOjE3MjI1NTMyMDF9.t5fGy95EOi-7qWDACLSS-SfSV8vpJMRjtt9OBE6sloo
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwiaWF0IjoxNzE5OTYxMjAxLCJleHAiOjE3MjI1NTMyMDF9.t5fGy95EOi-7qWDACLSS-SfSV8vpJMRjtt9OBE6sloo 
+
+
+
+################# TEACHER ##################

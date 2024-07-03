@@ -2,6 +2,7 @@ import { db } from "../db/connector.js";
 import { APIError } from "../error/api.error.js";
 import { ROLE, checkAllowedRole } from "../helper/role-check.helper.js";
 import { API_STATUS_CODE } from "../helper/status-code.helper.js";
+import { UserService } from "./user.service.js";
 
 export class TeacherService {
   static toTeacherResponse(teacher) {
@@ -57,6 +58,84 @@ export class TeacherService {
     return existedTeacher;
   }
 
+  static async create(request) {
+    const { email, name, password, role, nip, loggedUserRole } = request;
+    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
+
+    const user = await UserService.create({
+      email: email,
+      name: name,
+      password: password,
+      role: role,
+    });
+
+    const teacher = await db.teacher.create({
+      data: {
+        userId: user.id,
+        nip: nip,
+      },
+      select: {
+        id: true,
+        nip: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return {
+      id: teacher.id,
+      nip: teacher?.nip,
+      name: teacher?.user?.name,
+      email: teacher?.user?.email,
+    };
+  }
+
+  static async update(request) {
+    const { email, teacherId, name, password, role, nip, loggedUserRole } = request;
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
+
+    const existedTeacher = await this.checkTeacherMustBeExist(teacherId);
+
+    await UserService.update({
+      loggedUserRole: loggedUserRole,
+      email: email,
+      name: name,
+      password: password,
+      role: role,
+      userId: existedTeacher.userId,
+    });
+
+    const teacher = await db.teacher.update({
+      where: {
+        id: existedTeacher.id,
+      },
+      data: {
+        nip: nip,
+      },
+      select: {
+        id: true,
+        nip: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return {
+      id: teacher.id,
+      nip: teacher?.nip,
+      name: teacher?.user?.name,
+      email: teacher?.user?.email,
+    };
+  }
+
   static async getAll(request) {
     const { loggedUserRole, name } = request;
     checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
@@ -78,6 +157,23 @@ export class TeacherService {
         },
       ],
       where: filter,
+      select: {
+        id: true,
+        nip: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        class: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        createdAt: true,
+      },
     });
 
     return teachers.map((teacher) => this.toTeacherResponse(teacher));
@@ -91,55 +187,23 @@ export class TeacherService {
     return this.toTeacherResponse(teacher);
   }
 
-  static async update(user) {
-    const { userId, nip } = user;
+  static async delete(request) {
+    const { loggedUserRole, teacherId } = request;
+    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
 
-    if (!userId) {
-      throw new APIError(API_STATUS_CODE.BAD_REQUEST, "User id not inputted for update teacher!");
-    }
+    const teacher = await this.checkTeacherMustBeExist(teacherId);
 
-    const teacher = await this.checkTeacherMustBeExistByUserId(userId);
-
-    const updatedTeacher = await db.teacher.update({
+    await db.teacher.delete({
       where: {
         id: teacher.id,
       },
-      data: {
-        nip: nip ?? teacher.nip,
-      },
     });
 
-    return updatedTeacher;
-  }
-
-  static async create(request) {
-    const { userId, nip } = request;
-
-    if (!userId) {
-      throw new APIError(API_STATUS_CODE.BAD_REQUEST, "User id not inputted for create teacher!");
-    }
-
-    const teacher = await db.teacher.create({
-      data: {
-        userId: userId,
-        nip: nip ?? null,
-      },
-      select: {
-        nip: true,
-        user: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
+    await UserService.delete({
+      loggedUserRole: loggedUserRole,
+      userId: teacher.userId,
     });
 
-    return {
-      id: teacher.id,
-      nip: teacher?.nip,
-      name: teacher?.user?.name,
-      email: teacher?.user?.email,
-    };
+    return true;
   }
 }

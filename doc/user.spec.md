@@ -155,7 +155,7 @@ Response Body (Success):
     "id": 1,
     "name": "Teacher new",
     "email": "teacher@gmail.com",
-    "role": "TEACHER"
+    "role": "ADMIN"
   }
 }
 ```
