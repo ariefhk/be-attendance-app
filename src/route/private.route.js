@@ -3,12 +3,14 @@ import { authMiddleware } from "../middleware/auth.middleware.js";
 import { UserController } from "../controller/user.controller.js";
 import { TeacherController } from "../controller/teacher.controller.js";
 import { ParentController } from "../controller/parent.controller.js";
+import { ClassController } from "../controller/class.controller.js";
 
 const privateRouter = express.Router();
 
 const userPrefix = "/api/users";
 const teacherPrefix = "/api/teachers";
 const parentPrefix = "/api/parents";
+const classPrefix = "/api/classes";
 
 // USER ROUTES
 privateRouter.get(userPrefix + "/current", authMiddleware, UserController.getCurrent);
@@ -28,5 +30,11 @@ privateRouter.get(parentPrefix, authMiddleware, ParentController.getAll);
 privateRouter.post(parentPrefix, authMiddleware, ParentController.create);
 privateRouter.put(parentPrefix + "/:parentId", authMiddleware, ParentController.update);
 privateRouter.delete(parentPrefix + "/:parentId", authMiddleware, ParentController.delete);
+
+// CLASS ROUTES
+privateRouter.get(classPrefix, authMiddleware, ClassController.getAll);
+privateRouter.post(classPrefix, authMiddleware, ClassController.create);
+privateRouter.put(classPrefix + "/:classId", authMiddleware, ClassController.update);
+privateRouter.delete(classPrefix + "/:classId", authMiddleware, ClassController.delete);
 
 export { privateRouter };
