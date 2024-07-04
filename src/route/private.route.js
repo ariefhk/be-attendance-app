@@ -35,15 +35,23 @@ privateRouter.put(parentPrefix + "/:parentId", authMiddleware, ParentController.
 privateRouter.delete(parentPrefix + "/:parentId", authMiddleware, ParentController.delete);
 
 // CLASS ROUTES
-privateRouter.get(classPrefix, authMiddleware, ClassController.getAll);
-privateRouter.post(classPrefix, authMiddleware, ClassController.create);
+privateRouter.get(classPrefix + "/:teacherId/teacher", authMiddleware, ClassController.getAllByTeacherId);
+privateRouter.get(classPrefix + "/:classId/student", authMiddleware, ClassController.getAllStudentByClassId);
 privateRouter.put(classPrefix + "/:classId", authMiddleware, ClassController.update);
 privateRouter.delete(classPrefix + "/:classId", authMiddleware, ClassController.delete);
+privateRouter.get(classPrefix, authMiddleware, ClassController.getAll);
+privateRouter.post(classPrefix, authMiddleware, ClassController.create);
 
 // STUDENT ROUTES
+privateRouter.post(studentPrefix + "/:studentId/class/register", authMiddleware, StudentController.registerUserWithClass);
+privateRouter.put(studentPrefix + "/:studentId", authMiddleware, StudentController.update);
+privateRouter.delete(
+  studentPrefix + "/:studentId/class/:classId/delete",
+  authMiddleware,
+  StudentController.deleteStudentFromClass
+);
+privateRouter.delete(studentPrefix + "/:studentId", authMiddleware, StudentController.delete);
 privateRouter.get(studentPrefix, authMiddleware, StudentController.getAll);
 privateRouter.post(studentPrefix, authMiddleware, StudentController.create);
-privateRouter.put(studentPrefix + "/:studentId", authMiddleware, StudentController.update);
-privateRouter.delete(studentPrefix + "/:studentId", authMiddleware, StudentController.delete);
 
 export { privateRouter };

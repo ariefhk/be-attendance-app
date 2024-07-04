@@ -1,6 +1,7 @@
 import { StudentService } from "../service/student.service.js";
 import { ResponseHelper } from "../helper/response.helper.js";
 import { API_STATUS_CODE } from "../helper/status-code.helper.js";
+import { StudentClass } from "../service/studen-class.service.js";
 
 export class StudentController {
   static async create(req, res, next) {
@@ -18,6 +19,22 @@ export class StudentController {
       const result = await StudentService.create(createStudentRequest);
 
       return res.status(API_STATUS_CODE.CREATED).json(ResponseHelper.toJson("Success create student", result));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async registerUserWithClass(req, res, next) {
+    try {
+      const registerUserWithClassRequest = {
+        loggedUserRole: req?.loggedUser?.role,
+        studentId: req?.params?.studentId ? Number(req?.params?.studentId) : null,
+        classId: req?.body?.classId ? Number(req?.body?.classId) : null,
+      };
+
+      const result = await StudentClass.registerUserWithClass(registerUserWithClassRequest);
+
+      return res.status(API_STATUS_CODE.OK).json(ResponseHelper.toJson("Success register student with class", result));
     } catch (error) {
       next(error);
     }
@@ -54,6 +71,22 @@ export class StudentController {
       const result = await StudentService.getAll(getAllStudentRequest);
 
       return res.status(API_STATUS_CODE.OK).json(ResponseHelper.toJson("Success get List Student", result));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteStudentFromClass(req, res, next) {
+    try {
+      const deleteStudentFromClassRequest = {
+        loggedUserRole: req?.loggedUser?.role,
+        studentId: req?.params?.studentId ? Number(req?.params?.studentId) : null,
+        classId: req?.params?.classId ? Number(req?.params?.classId) : null,
+      };
+
+      await StudentClass.delete(deleteStudentFromClassRequest);
+
+      return res.status(API_STATUS_CODE.OK).json(ResponseHelper.toJson("Success delete Student from class"));
     } catch (error) {
       next(error);
     }

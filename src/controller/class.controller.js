@@ -1,6 +1,7 @@
 import { ResponseHelper } from "../helper/response.helper.js";
 import { API_STATUS_CODE } from "../helper/status-code.helper.js";
 import { ClassService } from "../service/class.service.js";
+import { StudentClass } from "../service/studen-class.service.js";
 
 export class ClassController {
   static async create(req, res, next) {
@@ -29,6 +30,38 @@ export class ClassController {
       const classes = await ClassService.getAll(getAllClassRequest);
 
       return res.status(API_STATUS_CODE.OK).json(ResponseHelper.toJson("Success get List Class", classes));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAllStudentByClassId(req, res, next) {
+    try {
+      const getAllStudentByClassIdRequest = {
+        loggedUserRole: req?.loggedUser?.role,
+        name: req?.query?.name,
+        classId: req?.params?.classId ? Number(req?.params?.classId) : null,
+      };
+
+      const result = await StudentClass.getAllStudentByClassId(getAllStudentByClassIdRequest);
+
+      return res.status(API_STATUS_CODE.OK).json(ResponseHelper.toJson("Success get List student bya class id", result));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAllByTeacherId(req, res, next) {
+    try {
+      const getAllByTeacherIdRequest = {
+        loggedUserRole: req?.loggedUser?.role,
+        name: req?.query?.name,
+        teacherId: req?.params?.teacherId ? Number(req?.params?.teacherId) : null,
+      };
+
+      const result = await ClassService.getByTeacherId(getAllByTeacherIdRequest);
+
+      return res.status(API_STATUS_CODE.OK).json(ResponseHelper.toJson("Success get List class by techer id", result));
     } catch (error) {
       next(error);
     }

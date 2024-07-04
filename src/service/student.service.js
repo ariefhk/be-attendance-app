@@ -26,7 +26,7 @@ export class StudentService {
   static async getAll(request) {
     const { name, loggedUserRole } = request;
     const filter = {};
-    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
 
     if (name) {
       filter["name"] = {
@@ -93,7 +93,7 @@ export class StudentService {
 
   static async create(request) {
     const { name, nisn, email, no_telp, gender, parentId, loggedUserRole } = request;
-    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
 
     const existedParent = await ParentService.checkParentMustBeExist(parentId);
 
@@ -144,7 +144,7 @@ export class StudentService {
 
   static async update(request) {
     const { studentId, name, nisn, email, no_telp, gender, parentId, loggedUserRole } = request;
-    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
 
     const existedStudent = await StudentService.checkStudentMustBeExist(studentId);
 
@@ -202,7 +202,7 @@ export class StudentService {
 
   static async delete(request) {
     const { studentId, loggedUserRole } = request;
-    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
 
     const existedStudent = await StudentService.checkStudentMustBeExist(studentId);
 

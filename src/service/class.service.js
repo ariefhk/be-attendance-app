@@ -3,6 +3,7 @@ import { APIError } from "../error/api.error.js";
 import { ROLE, checkAllowedRole } from "../helper/role-check.helper.js";
 import { API_STATUS_CODE } from "../helper/status-code.helper.js";
 import { TeacherService } from "./teacher.service.js";
+import { UserService } from "./user.service.js";
 
 export class ClassService {
   static async checkClassMustBeExist(classId) {
@@ -13,6 +14,21 @@ export class ClassService {
     const existedClass = await db.class.findUnique({
       where: {
         id: classId,
+      },
+      select: {
+        id: true,
+        name: true,
+        teacher: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -25,7 +41,7 @@ export class ClassService {
 
   static async create(request) {
     const { name, teacherId, loggedUserRole } = request;
-    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
 
     const existedTeacher = await TeacherService.checkTeacherMustBeExist(teacherId);
 
@@ -64,7 +80,7 @@ export class ClassService {
 
   static async update(request) {
     const { classId, teacherId, name, loggedUserRole } = request;
-    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
 
     const existedClass = await ClassService.checkClassMustBeExist(classId);
 
@@ -108,9 +124,73 @@ export class ClassService {
     };
   }
 
+  static async getByTeacherId(request) {
+    const { teacherId, name, loggedUserRole } = request;
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
+    const filter = {};
+
+    if (name) {
+      filter["name"] = {
+        contains: name,
+        mode: "insensitive",
+      };
+    }
+
+    const existedTeacher = await TeacherService.checkTeacherMustBeExistByUserId(teacherId);
+
+    const classes = await db.class.findMany({
+      orderBy: [
+        {
+          createdAt: "desc",
+        },
+      ],
+      where: {
+        teacherId: existedTeacher.id,
+      },
+      select: {
+        id: true,
+        name: true,
+        teacher: {
+          select: {
+            id: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        studentClass: {
+          select: {
+            student: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return classes.map((cls) => {
+      return {
+        id: cls.id,
+        name: cls.name,
+        teacher: {
+          id: cls?.teacher?.id,
+          name: cls?.teacher?.user?.name,
+          email: cls?.teacher?.user?.email,
+        },
+        studentCount: `${cls?.studentClass?.length}`,
+      };
+    });
+  }
+
   static async getAll(request) {
     const { name, loggedUserRole } = request;
-    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
     const filter = {};
 
     if (name) {
@@ -170,7 +250,7 @@ export class ClassService {
 
   static async delete(request) {
     const { classId, loggedUserRole } = request;
-    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
 
     const existedClass = await ClassService.checkClassMustBeExist(classId);
 

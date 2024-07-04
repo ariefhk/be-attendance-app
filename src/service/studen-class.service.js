@@ -2,7 +2,6 @@ import { db } from "../db/connector.js";
 import { APIError } from "../error/api.error.js";
 import { ROLE, checkAllowedRole } from "../helper/role-check.helper.js";
 import { API_STATUS_CODE } from "../helper/status-code.helper.js";
-import { ParentService } from "./parent.service.js";
 import { StudentService } from "./student.service.js";
 import { ClassService } from "./class.service.js";
 
@@ -25,43 +24,37 @@ export class StudentClass {
     return existedStudentClass;
   }
 
-  static async getAllStudentClassByStudentName(request) {
-    const { studentName, loggedUserRole } = request;
-    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
+  static async getAllStudentByClassId(request) {
+    const { name, loggedUserRole, classId } = request;
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
+
+    const existedClass = await ClassService.checkClassMustBeExist(classId);
+
     const filter = {};
 
-    if (studentName) {
+    if (name) {
       filter["student"] = {
         name: {
-          contains: studentName,
+          contains: name,
           mode: "insensitive",
         },
       };
     }
 
     const studentClasses = await db.studentClass.findMany({
-      orderBy: [
-        {
-          createdAt: "desc",
-        },
-      ],
-      where: filter,
+      where: {
+        classId: existedClass.id,
+      },
       select: {
-        id: true,
         student: {
           select: {
             id: true,
             name: true,
+            gender: true,
             email: true,
             nisn: true,
             no_telp: true,
-          },
-        },
-        class: {
-          select: {
-            id: true,
-            name: true,
-            teacher: {
+            parent: {
               select: {
                 id: true,
                 user: {
@@ -76,11 +69,41 @@ export class StudentClass {
         },
       },
     });
+
+    const formattedStudentClasses =
+      studentClasses.length > 0
+        ? studentClasses.map((sc) => {
+            return {
+              student: {
+                id: sc?.student?.id,
+                name: sc?.student?.name,
+                gender: sc?.student?.gender,
+                nisn: sc?.student?.nisn,
+              },
+              parent: {
+                id: sc?.student?.parent?.id,
+                name: sc?.student?.parent?.user?.name,
+              },
+            };
+          })
+        : [];
+
+    return {
+      class: {
+        id: existedClass.id,
+        name: existedClass.name,
+      },
+      teacher: {
+        id: existedClass.teacher.id,
+        name: existedClass.teacher.user.name,
+      },
+      students: formattedStudentClasses,
+    };
   }
 
-  static async create(request) {
+  static async registerUserWithClass(request) {
     const { studentId, classId, loggedUserRole } = request;
-    checkAllowedRole(ROLE.IS_ADMIN, loggedUserRole);
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
 
     const existedStudent = await StudentService.checkStudentMustBeExist(studentId);
     const existedClass = await ClassService.checkClassMustBeExist(classId);
@@ -91,7 +114,6 @@ export class StudentClass {
         classId: existedClass.id,
       },
       select: {
-        id: true,
         student: {
           select: {
             id: true,
@@ -101,7 +123,46 @@ export class StudentClass {
             no_telp: true,
           },
         },
+        class: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
+
+    return {
+      student: {
+        id: createdStudentClass?.student?.id,
+        name: createdStudentClass?.student?.name,
+        email: createdStudentClass?.student?.email,
+        nisn: createdStudentClass?.student?.nisn,
+        no_telp: createdStudentClass?.student?.no_telp,
+      },
+      class: {
+        id: createdStudentClass?.class?.id,
+        name: createdStudentClass?.class?.name,
+      },
+    };
+  }
+
+  static async delete(request) {
+    const { studentId, classId, loggedUserRole } = request;
+    checkAllowedRole(ROLE.IS_ADMIN_TEACHER, loggedUserRole);
+
+    const existedStudent = await StudentService.checkStudentMustBeExist(studentId);
+    const existedClass = await ClassService.checkClassMustBeExist(classId);
+
+    await db.studentClass.delete({
+      where: {
+        studentId_classId: {
+          studentId: existedStudent.id,
+          classId: existedClass.id,
+        },
+      },
+    });
+
+    return true;
   }
 }
